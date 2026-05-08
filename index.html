@@ -399,6 +399,74 @@ html, body {
   }
 }
 
+/* ===== Answer Input ===== */
+.answer-input-area {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.answer-input {
+  width: 100%;
+  max-width: 200px;
+  padding: 10px 14px;
+  font-size: 1.1em;
+  font-weight: 700;
+  text-align: center;
+  border: 2px solid #d4c8b8;
+  border-radius: 10px;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.answer-input:focus {
+  border-color: #e11d48;
+}
+
+.answer-submit {
+  display: block;
+  margin: 10px auto 0;
+  padding: 10px 32px;
+  font-size: 0.95em;
+  font-weight: 800;
+  color: #fff;
+  background: #e11d48;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.answer-submit:active {
+  transform: scale(0.95);
+  background: #be123c;
+}
+
+.answer-submit.solved {
+  background: #16a34a;
+  cursor: default;
+}
+
+.answer-feedback {
+  margin-top: 8px;
+  font-size: 0.85em;
+  font-weight: 700;
+  min-height: 1.2em;
+}
+
+.answer-feedback.wrong {
+  color: #e11d48;
+}
+
+.answer-feedback.correct {
+  color: #16a34a;
+}
+
+.nav-dot.locked {
+  background: rgba(255,255,255,0.1);
+}
+
 @media (max-width: 360px) {
   .card {
     padding: 18px 12px;
@@ -444,12 +512,20 @@ html, body {
         </div>
       </div>
 
-      <div class="question-text" style="color:#215F9A;background:#eef4fa;border-color:#b8d4ee">？に入る文字は？</div>
+      <div class="question-text" style="color:#215F9A;background:#eef4fa;border-color:#b8d4ee">？に入るひらがなは？</div>
+
+      <div style="text-align:center;margin-top:10px;font-size:0.75em;color:#999;font-weight:600">※ 正解しないと次のページに進めません</div>
+
+      <div class="answer-input-area">
+        <input type="text" class="answer-input" id="answer1" placeholder="答えを入力" maxlength="10">
+        <button class="answer-submit" id="submit1">回答する</button>
+        <div class="answer-feedback" id="feedback1"></div>
+      </div>
     </div>
   </div>
 
   <!-- ===== SLIDE 2: イラスト差分パズル ===== -->
-  <div class="slide" id="slide2">
+  <div class="slide locked" id="slide2">
     <div class="card">
       <div class="illust-puzzle">
         <!-- Left Box: 8 items scattered -->
@@ -527,11 +603,17 @@ html, body {
       </div>
 
       <div class="question-text">？に入るひらがな1文字を答えよ</div>
+
+      <div class="answer-input-area">
+        <input type="text" class="answer-input" id="answer2" placeholder="答えを入力" maxlength="5">
+        <button class="answer-submit" id="submit2">回答する</button>
+        <div class="answer-feedback" id="feedback2"></div>
+      </div>
     </div>
   </div>
 
   <!-- ===== SLIDE 3: 都道府県パズル ===== -->
-  <div class="slide" id="slide3">
+  <div class="slide locked" id="slide3">
     <div class="card">
       <div class="puzzle-table">
         <div class="puzzle-row">
@@ -562,11 +644,17 @@ html, body {
       </div>
 
       <div class="question-text" style="color:#FF0000;background:#fff2f2;border-color:#ffcccc">？に入る数字は？</div>
+
+      <div class="answer-input-area">
+        <input type="text" class="answer-input" id="answer3" placeholder="答えを入力" maxlength="5">
+        <button class="answer-submit" id="submit3">回答する</button>
+        <div class="answer-feedback" id="feedback3"></div>
+      </div>
     </div>
   </div>
 
   <!-- ===== SLIDE 4: 最終回答 ===== -->
-  <div class="slide" id="slide4">
+  <div class="slide locked" id="slide4">
     <div class="card">
       <div class="answer-row">
         <div class="answer-box" style="border-color:#FF0000">
@@ -600,22 +688,113 @@ html, body {
 
 <script>
 (function() {
-  const slides = document.querySelectorAll('.slide');
-  const dots = document.querySelectorAll('.nav-dot');
-  const prevBtn = document.getElementById('prevBtn');
-  const nextBtn = document.getElementById('nextBtn');
-  let current = 0;
-  const total = slides.length;
+  var slides = document.querySelectorAll('.slide');
+  var dots = document.querySelectorAll('.nav-dot');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var current = 0;
+  var total = slides.length;
+
+  var answers = {
+    1: ['ぞう'],
+    2: ['こ'],
+    3: ['0', '０']
+  };
+  var solved = { 1: false, 2: false, 3: false };
+
+  updateDots();
+
+  function isLocked(index) {
+    return slides[index].classList.contains('locked');
+  }
+
+  function updateDots() {
+    dots.forEach(function(dot, i) {
+      if (isLocked(i)) {
+        dot.classList.add('locked');
+      } else {
+        dot.classList.remove('locked');
+      }
+    });
+  }
+
+  function updateNav() {
+    prevBtn.disabled = current === 0;
+    if (current === total - 1) {
+      nextBtn.disabled = true;
+    } else if (isLocked(current + 1)) {
+      nextBtn.disabled = true;
+    } else {
+      nextBtn.disabled = false;
+    }
+  }
 
   function goTo(index) {
     if (index < 0 || index >= total) return;
+    if (isLocked(index)) return;
     slides[current].classList.remove('active');
     dots[current].classList.remove('active');
     current = index;
     slides[current].classList.add('active');
     dots[current].classList.add('active');
-    prevBtn.disabled = current === 0;
-    nextBtn.disabled = current === total - 1;
+    updateNav();
+  }
+
+  function unlockSlide(qNum) {
+    var nextSlide = slides[qNum];
+    if (nextSlide) {
+      nextSlide.classList.remove('locked');
+      updateDots();
+      updateNav();
+    }
+  }
+
+  function checkAnswer(qNum) {
+    if (solved[qNum]) return;
+    var input = document.getElementById('answer' + qNum);
+    var feedback = document.getElementById('feedback' + qNum);
+    var submitBtn = document.getElementById('submit' + qNum);
+    var userAnswer = input.value.trim();
+
+    if (!userAnswer) {
+      feedback.textContent = '答えを入力してください';
+      feedback.className = 'answer-feedback wrong';
+      return;
+    }
+
+    var correctAnswers = answers[qNum];
+    var isCorrect = correctAnswers.some(function(a) {
+      return userAnswer === a;
+    });
+
+    if (isCorrect) {
+      solved[qNum] = true;
+      feedback.textContent = '正解！';
+      feedback.className = 'answer-feedback correct';
+      submitBtn.textContent = '正解！';
+      submitBtn.classList.add('solved');
+      input.disabled = true;
+      unlockSlide(qNum);
+    } else {
+      feedback.textContent = '不正解...もう一度考えてみよう';
+      feedback.className = 'answer-feedback wrong';
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  for (var q = 1; q <= 3; q++) {
+    (function(qNum) {
+      document.getElementById('submit' + qNum).addEventListener('click', function() {
+        checkAnswer(qNum);
+      });
+      document.getElementById('answer' + qNum).addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          checkAnswer(qNum);
+        }
+      });
+    })(q);
   }
 
   prevBtn.addEventListener('click', function() { goTo(current - 1); });
@@ -627,11 +806,10 @@ html, body {
     });
   });
 
-  // Touch swipe support
-  let touchStartX = 0;
-  let touchStartY = 0;
-  let touchEndX = 0;
-  let touchEndY = 0;
+  var touchStartX = 0;
+  var touchStartY = 0;
+  var touchEndX = 0;
+  var touchEndY = 0;
 
   document.addEventListener('touchstart', function(e) {
     touchStartX = e.changedTouches[0].screenX;
@@ -647,17 +825,15 @@ html, body {
   function handleSwipe() {
     var dx = touchEndX - touchStartX;
     var dy = touchEndY - touchStartY;
-    // Only swipe if horizontal movement > 50px and > vertical movement
     if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
       if (dx < 0) {
-        goTo(current + 1); // swipe left → next
+        goTo(current + 1);
       } else {
-        goTo(current - 1); // swipe right → prev
+        goTo(current - 1);
       }
     }
   }
 
-  // Keyboard support
   document.addEventListener('keydown', function(e) {
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
       goTo(current + 1);
@@ -665,6 +841,8 @@ html, body {
       goTo(current - 1);
     }
   });
+
+  updateNav();
 })();
 </script>
 
