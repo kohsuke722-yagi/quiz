@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>NAZOTOKI</title>
+<style>
+/* ===== Reset & Base ===== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Hiragino Sans', 'Meiryo', 'Yu Gothic', sans-serif;
+  background: #1a1a2e;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-y;
+}
+
+/* ===== Slide Container ===== */
+.slides-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.slide {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: url('images/image1.png') center center / cover no-repeat;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+  overflow-y: auto;
+  padding: 20px 16px;
+}
+
+.slide.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Dark overlay for readability */
+.slide::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(10, 10, 30, 0.65);
+  z-index: 0;
+}
+
+.slide > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== Common Card ===== */
+.card {
+  background: rgba(255, 255, 255, 0.93);
+  border-radius: 18px;
+  padding: 24px 18px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+  max-width: 400px;
+  width: 100%;
+}
+
+/* ===== Slide Number Badge ===== */
+.slide-badge {
+  display: inline-block;
+  background: #e11d48;
+  color: #fff;
+  font-size: 0.7em;
+  font-weight: 800;
+  padding: 3px 14px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+  letter-spacing: 0.1em;
+}
+
+/* ===== Slide Title ===== */
+.slide-title {
+  text-align: center;
+  font-size: 1.15em;
+  font-weight: 900;
+  color: #333;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+/* ===== Puzzle Table (Slide 1 & 3) ===== */
+.puzzle-table {
+  width: 100%;
+  margin: 0 auto 16px;
+}
+
+.puzzle-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px dashed #e0d8d0;
+}
+
+.puzzle-row:last-child {
+  border-bottom: none;
+}
+
+.puzzle-left {
+  font-size: 1.1em;
+  font-weight: 700;
+  color: #444;
+  min-width: 60px;
+  text-align: right;
+}
+
+.puzzle-arrow {
+  font-size: 1.2em;
+  color: #e11d48;
+  font-weight: 900;
+}
+
+.puzzle-right {
+  font-size: 1.1em;
+  font-weight: 700;
+  color: #444;
+  min-width: 60px;
+  text-align: left;
+}
+
+.puzzle-right.mystery {
+  font-size: 1.5em;
+  font-weight: 900;
+}
+.puzzle-right.mystery.color-q1 {
+  color: #215F9A;
+}
+.puzzle-right.mystery.color-q3 {
+  color: #FF0000;
+}
+
+/* ===== Question Text ===== */
+.question-text {
+  text-align: center;
+  font-size: 0.95em;
+  font-weight: 800;
+  color: #e11d48;
+  margin-top: 14px;
+  padding: 10px;
+  background: #fef2f2;
+  border-radius: 10px;
+  border: 2px solid #fecaca;
+}
+
+/* ===== Slide 2: Illustration Puzzle ===== */
+.illust-puzzle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.illust-box {
+  position: relative;
+  border: 2px solid #d4c8b8;
+  border-radius: 12px;
+  background: #f8f5f0;
+}
+
+.illust-box.left {
+  width: 44%;
+  aspect-ratio: 3 / 4;
+}
+
+.illust-box.right {
+  width: 44%;
+  aspect-ratio: 3 / 4;
+}
+
+.illust-item {
+  position: absolute;
+  width: 36%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e8e0d8;
+  box-shadow: 1px 2px 6px rgba(0,0,0,0.1);
+}
+
+.illust-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.illust-item .item-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-size: 0.45em;
+  text-align: center;
+  padding: 1px 2px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.illust-equals {
+  font-size: 1.6em;
+  font-weight: 900;
+  color: #e11d48;
+  flex-shrink: 0;
+}
+
+.mystery-item {
+  position: absolute;
+  width: 36%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fef2f2;
+  border: 2.5px solid #e11d48;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 1px 2px 8px rgba(225,29,72,0.2);
+}
+
+.mystery-item img {
+  width: 55%;
+  height: 55%;
+  object-fit: contain;
+}
+
+/* ===== Slide 4: Final Answer ===== */
+.final-mystery {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.final-mystery img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}
+
+.answer-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.answer-box {
+  width: 52px;
+  height: 52px;
+  border: 3px solid #e11d48;
+  border-radius: 12px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5em;
+  font-weight: 900;
+  color: #333;
+}
+
+.answer-suffix {
+  font-size: 1em;
+  font-weight: 800;
+  color: #444;
+  white-space: nowrap;
+}
+
+.answer-labels {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.answer-label-num {
+  width: 52px;
+  text-align: center;
+  font-size: 0.7em;
+  color: #bbb;
+  font-weight: 700;
+}
+
+.final-hint {
+  text-align: center;
+  font-size: 0.8em;
+  color: #999;
+  margin-top: 16px;
+  line-height: 1.6;
+}
+
+/* ===== Navigation ===== */
+.nav-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 12px 20px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.nav-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 1.2em;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.nav-btn:active {
+  background: rgba(255,255,255,0.35);
+  transform: scale(0.92);
+}
+
+.nav-btn:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.nav-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  transition: all 0.3s;
+}
+
+.nav-dot.active {
+  background: #fff;
+  transform: scale(1.2);
+}
+
+/* ===== Page indicator ===== */
+.page-indicator {
+  text-align: center;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.7em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+/* ===== Responsive Adjustments ===== */
+@media (max-height: 600px) {
+  .card {
+    padding: 16px 14px;
+  }
+  .slide-title {
+    font-size: 1em;
+    margin-bottom: 10px;
+  }
+  .puzzle-row {
+    padding: 5px 0;
+  }
+  .answer-box {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media (max-width: 360px) {
+  .card {
+    padding: 18px 12px;
+  }
+  .illust-item .item-label {
+    font-size: 0.4em;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="slides-wrapper">
+
+  <!-- ===== SLIDE 1: 漢字変換パズル ===== -->
+  <div class="slide active" id="slide1">
+    <div class="card">
+      <div class="puzzle-table">
+        <div class="puzzle-row">
+          <span class="puzzle-left">牡蠣</span>
+          <span class="puzzle-arrow">→</span>
+          <span class="puzzle-right">愛</span>
+        </div>
+        <div class="puzzle-row">
+          <span class="puzzle-left">タコ</span>
+          <span class="puzzle-arrow">→</span>
+          <span class="puzzle-right">竿</span>
+        </div>
+        <div class="puzzle-row">
+          <span class="puzzle-left">薪</span>
+          <span class="puzzle-arrow">→</span>
+          <span class="puzzle-right">灰</span>
+        </div>
+        <div class="puzzle-row">
+          <span class="puzzle-left">季節</span>
+          <span class="puzzle-arrow">→</span>
+          <span class="puzzle-right">生簀</span>
+        </div>
+        <div class="puzzle-row">
+          <span class="puzzle-left">毒</span>
+          <span class="puzzle-arrow">→</span>
+          <span class="puzzle-right mystery color-q1">？</span>
+        </div>
+      </div>
+
+      <div class="question-text" style="color:#215F9A;background:#eef4fa;border-color:#b8d4ee">？に入る文字は？</div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 2: イラスト差分パズル ===== -->
+  <div class="slide" id="slide2">
+    <div class="card">
+      <div class="illust-puzzle">
+        <!-- Left Box: 8 items scattered -->
+        <div class="illust-box left">
+          <div class="illust-item" style="top:2%;left:5%;transform:rotate(-3deg)">
+            <img src="images/image4.png" alt="タバコ">
+
+          </div>
+          <div class="illust-item" style="top:5%;left:55%;transform:rotate(4deg)">
+            <img src="images/image6.png" alt="おにぎり">
+
+          </div>
+          <div class="illust-item" style="top:26%;left:28%;transform:rotate(-2deg)">
+            <img src="images/image5.png" alt="パイナップル">
+
+          </div>
+          <div class="illust-item" style="top:30%;left:60%;transform:rotate(5deg)">
+            <img src="images/image8.png" alt="病院">
+
+          </div>
+          <div class="illust-item" style="top:50%;left:8%;transform:rotate(3deg)">
+            <img src="images/image9.png" alt="グミ">
+
+          </div>
+          <div class="illust-item" style="top:52%;left:50%;transform:rotate(-4deg)">
+            <img src="images/image3.png" alt="りんご">
+
+          </div>
+          <div class="illust-item" style="top:74%;left:18%;transform:rotate(2deg)">
+            <img src="images/image10.png" alt="牡蠣">
+
+          </div>
+          <div class="illust-item" style="top:72%;left:58%;transform:rotate(-5deg)">
+            <img src="images/image7.png" alt="犬">
+
+          </div>
+        </div>
+
+        <div class="illust-equals">＝</div>
+
+        <!-- Right Box: 7 items + ? scattered -->
+        <div class="illust-box right">
+          <div class="illust-item" style="top:1%;left:8%;transform:rotate(4deg)">
+            <img src="images/image11.png" alt="バッタ">
+
+          </div>
+          <div class="illust-item" style="top:4%;left:58%;transform:rotate(-3deg)">
+            <img src="images/image13.png" alt="あぶらあげ">
+
+          </div>
+          <div class="illust-item" style="top:25%;left:30%;transform:rotate(2deg)">
+            <img src="images/image15.png" alt="かき氷">
+
+          </div>
+          <div class="illust-item" style="top:28%;left:62%;transform:rotate(-5deg)">
+            <img src="images/image14.png" alt="くま">
+
+          </div>
+          <div class="illust-item" style="top:50%;left:5%;transform:rotate(-2deg)">
+            <img src="images/image17.png" alt="銀">
+
+          </div>
+          <div class="illust-item" style="top:52%;left:55%;transform:rotate(3deg)">
+            <img src="images/image16.png" alt="病人">
+
+          </div>
+          <div class="illust-item" style="top:75%;left:15%;transform:rotate(5deg)">
+            <img src="images/image12.png" alt="管">
+
+          </div>
+          <div class="mystery-item" style="top:73%;left:55%;transform:rotate(-3deg)">
+            <img src="images/image2.png" alt="？">
+          </div>
+        </div>
+      </div>
+
+      <div class="question-text">？に入るひらがな1文字を答えよ</div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 3: 都道府県パズル ===== -->
+  <div class="slide" id="slide3">
+    <div class="card">
+      <div class="puzzle-table">
+        <div class="puzzle-row">
+          <span class="puzzle-left">山口</span>
+          <span class="puzzle-arrow">＝</span>
+          <span class="puzzle-right">2</span>
+        </div>
+        <div class="puzzle-row">
+          <span class="puzzle-left">静岡</span>
+          <span class="puzzle-arrow">＝</span>
+          <span class="puzzle-right">1</span>
+        </div>
+        <div class="puzzle-row">
+          <span class="puzzle-left">埼玉</span>
+          <span class="puzzle-arrow">＝</span>
+          <span class="puzzle-right">3</span>
+        </div>
+        <div class="puzzle-row">
+          <span class="puzzle-left">滋賀</span>
+          <span class="puzzle-arrow">＝</span>
+          <span class="puzzle-right">0</span>
+        </div>
+        <div class="puzzle-row">
+          <span class="puzzle-left">東京</span>
+          <span class="puzzle-arrow">＝</span>
+          <span class="puzzle-right mystery color-q3">？</span>
+        </div>
+      </div>
+
+      <div class="question-text" style="color:#FF0000;background:#fff2f2;border-color:#ffcccc">？に入る数字は？</div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 4: 最終回答 ===== -->
+  <div class="slide" id="slide4">
+    <div class="card">
+      <div class="answer-row">
+        <div class="answer-box" style="border-color:#FF0000">
+          <span style="color:#FF0000;font-size:1.2em">？</span>
+        </div>
+        <div class="answer-box" style="border-color:#4A8AC0;padding:6px">
+          <img src="images/image2.png" alt="？" style="width:100%;height:100%;object-fit:contain">
+        </div>
+        <div class="answer-box" style="border-color:#215F9A">
+          <span style="color:#215F9A;font-size:1.2em">？</span>
+        </div>
+        <span class="answer-suffix">の中の缶の裏</span>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== Navigation Bar ===== -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" disabled>◀</button>
+  <div class="nav-dots">
+    <div class="nav-dot active" data-slide="0"></div>
+    <div class="nav-dot" data-slide="1"></div>
+    <div class="nav-dot" data-slide="2"></div>
+    <div class="nav-dot" data-slide="3"></div>
+  </div>
+  <button class="nav-btn" id="nextBtn">▶</button>
+</div>
+
+<script>
+(function() {
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.nav-dot');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  let current = 0;
+  const total = slides.length;
+
+  function goTo(index) {
+    if (index < 0 || index >= total) return;
+    slides[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = index;
+    slides[current].classList.add('active');
+    dots[current].classList.add('active');
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+  }
+
+  prevBtn.addEventListener('click', function() { goTo(current - 1); });
+  nextBtn.addEventListener('click', function() { goTo(current + 1); });
+
+  dots.forEach(function(dot) {
+    dot.addEventListener('click', function() {
+      goTo(parseInt(this.dataset.slide));
+    });
+  });
+
+  // Touch swipe support
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchEndX = 0;
+  let touchEndY = 0;
+
+  document.addEventListener('touchstart', function(e) {
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+  }, { passive: true });
+
+  document.addEventListener('touchend', function(e) {
+    touchEndX = e.changedTouches[0].screenX;
+    touchEndY = e.changedTouches[0].screenY;
+    handleSwipe();
+  }, { passive: true });
+
+  function handleSwipe() {
+    var dx = touchEndX - touchStartX;
+    var dy = touchEndY - touchStartY;
+    // Only swipe if horizontal movement > 50px and > vertical movement
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) {
+        goTo(current + 1); // swipe left → next
+      } else {
+        goTo(current - 1); // swipe right → prev
+      }
+    }
+  }
+
+  // Keyboard support
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      goTo(current + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      goTo(current - 1);
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
